@@ -1,8 +1,8 @@
+const token = require("dotenv").config();
 const request = require("request");
 const parseString = require("xml2js").parseString;
 const stripPrefix = require("xml2js").processors.stripPrefix;
 const createSoapMessage = require("./createSoapMessage.js");
-const token = require("./token");
 
 const makeStationRequest = (origin, destination, callback) => {
   // create the post options
@@ -11,7 +11,7 @@ const makeStationRequest = (origin, destination, callback) => {
     headers: {
       "Content-Type": "text/xml"
     },
-    body: createSoapMessage(token, origin, destination),
+    body: createSoapMessage(process.env.nr_token, origin, destination),
     method: "POST"
   };
 
