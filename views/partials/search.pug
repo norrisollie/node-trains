@@ -1,0 +1,8 @@
+form(method="GET" action="/times")
+    if showResults
+        input(type="text" name="origin" value=origin)
+        input(type="text" name="destination" value=destination)
+    else 
+        input(type="text" name="origin" placeholder="origin")
+        input(type="text" name="destination" placeholder="destination")
+    input(class="submit" type="submit" value="To the trains")

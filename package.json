@@ -1,22 +1,21 @@
 {
-  "name": "trains",
+  "name": "node-trains",
   "version": "1.0.0",
   "main": "app.js",
+  "repository": "https://github.com/norrisollie/node-trains.git",
+  "author": "Ollie Norris <ollie.norris@adylic.com>",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.19.2",
     "body-parser": "^1.19.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
-    "global": "^4.4.0",
+    "express-partials": "^0.3.0",
+    "node-sass": "^4.13.1",
     "nodemon": "^2.0.2",
     "pug": "^2.0.4",
-    "request": "^2.88.0",
-    "twilio": "^3.39.4",
-    "twilio-cli": "^1.9.5",
-    "xml2js": "^0.4.23"
+    "soap": "^0.31.0"
   },
   "scripts": {
-    "run": "nodemon ./app.js localhost:8000"
+    "dev": "nodemon app.js localhost 8000 & node-sass -w styles/style.sass -o public/css"
   }
 }

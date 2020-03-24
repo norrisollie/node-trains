@@ -1,119 +1,57 @@
 const express = require("express");
-const app = express();
+const path = require("path");
 const bodyParser = require("body-parser");
+const soap = require("soap");
+require("dotenv").config();
 
-const makeStationRequest = require("./makeStationRequest.js");
-const sendMessage = require("./sendMessage.js");
+const app = express();
 
-const MessagingResponse = require("twilio").twiml.MessagingResponse;
-
-app.use(bodyParser.urlencoded({ extended: false }));
-
+app.set("static", "/");
 app.set("view engine", "pug");
+app.set("views", path.join(__dirname, "/views"));
 
-app.set("views", "./views");
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ extended: true }));
+app.use(express.static("public"));
 
-// get request for the crs codes
-app.get("/:origin/:destination", (req, res) => {
-  const origin = req.params.origin;
-  const destination = req.params.destination;
+// soap request for train data
+const url =
+  "https://realtime.nationalrail.co.uk/OpenLDBWS/wsdl.aspx?ver=2017-10-01";
+const args = {
+  ["typ:TokenValue"]: process.env.nr_token
+};
 
-  const receiveData = data => {
-    const departureData =
-      data.GetNextDeparturesWithDetailsResponse.DeparturesBoard;
+soap.createClient(url, (err, client) => {
+  client.addSoapHeader(
+    "<soapenv:Header><typ:AccessToken><typ:TokenValue>" +
+      process.env.nr_token +
+      "</typ:TokenValue></typ:AccessToken></soapenv:Header>"
+  );
 
-    let smsData = {
-      origin: departureData.locationName,
-      std: departureData.departures.destination.service.std,
-      etd: departureData.departures.destination.service.etd,
-      operator: departureData.departures.destination.service.operator,
-      platform: departureData.departures.destination.service.platform,
-      destination:
-        departureData.departures.destination.service.destination.location
-          .locationName,
-      calling_points:
-        departureData.departures.destination.service.subsequentCallingPoints
-          .callingPointList.callingPoint
-    };
-
-    sendMessage(smsData);
-
-    // res.render("index", {
-    //   origin: origin_name,
-    //   std: departure_std,
-    //   destination: destination_name,
-    //   via: destination_via
-    // });
-  };
-
-  makeStationRequest(origin, destination, receiveData);
-});
-
-app.post("/sms", (req, res) => {
-  // read the reply to message
-  const response = req.body.Body;
-  const splitResponse = response.split("to");
-  const from = splitResponse[0].trim().toUpperCase();
-  const to = splitResponse[1].trim().toUpperCase();
-
-  console.log(from + " to " + to);
-
-  makeStationRequest(from, to, function(data) {
-    const departureData =
-      data.GetNextDeparturesWithDetailsResponse.DeparturesBoard;
-
-    let smsData = {
-      origin: departureData.locationName,
-      std: departureData.departures.destination.service.std,
-      etd: departureData.departures.destination.service.etd,
-      operator: departureData.departures.destination.service.operator,
-      platform: departureData.departures.destination.service.platform,
-      destination:
-        departureData.departures.destination.service.destination.location
-          .locationName,
-      calling_points:
-        departureData.departures.destination.service.subsequentCallingPoints
-          .callingPointList.callingPoint
-    };
-
-    let callingString = "";
-
-    for (let i = 0; i < smsData.calling_points.length; i++) {
-      if ([i] < smsData.calling_points.length - 1) {
-        callingString += smsData.calling_points[i].locationName + ", ";
-      } else if ([i] <= smsData.calling_points.length - 1) {
-        callingString += "and " + smsData.calling_points[i].locationName + ".";
-      }
-    }
-
-    const message =
-      "The next train from " +
-      smsData.origin +
-      " to " +
-      smsData.destination +
-      " is the " +
-      smsData.std +
-      " " +
-      smsData.operator +
-      " service, departing from platform " +
-      smsData.platform +
-      ". " +
-      "This train calls at " +
-      callingString;
-
-    const twiml = new MessagingResponse();
-
-    twiml.message(message);
-
-    res.writeHead(200, { "Content-Type": "text/xml" });
-    res.end(twiml.toString());
+  client.GetDepBoardWithDetails(args, (err, res) => {
+    console.log(client);
   });
-
-  //   console.log();
-
-  //   console.log(from + " to " + to);
-
-  //   makeStationRequest(from, to, sendMessage);
 });
 
-app.listen("8000");
+// home page
+app.get("/", (req, res) => {
+  res.render("layouts/index");
+});
+
+// form action
+app.get("/times", (req, res) => {
+  const { origin, destination } = req.query;
+  res.redirect("/" + origin + "/" + destination);
+});
+
+app.get("/:origin/:destination", (req, res) => {
+  const { origin, destination } = req.params;
+  let showResults = true;
+  res.render("layouts/index", {
+    showResults: showResults,
+    origin: origin,
+    destination: destination
+  });
+});
+
+app.listen(8000);

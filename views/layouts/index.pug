@@ -1,0 +1,13 @@
+html
+    head
+        link(rel="stylesheet" href="/css/style.css" type="text/css")
+        body
+            div.outer-wrapper
+                div.inner-wrapper
+                    h1 Train Times UK
+                    include ../partials/search
+                    div.section-wrapper
+                        if showResults
+                            include ../partials/results
+                        else
+                            include ../partials/make-search
