@@ -1,1 +1,8 @@
-h1 You have made a search...
+h1 Searching for trains between #{origin} and #{destination}
+for service in services
+    .service-wrapper 
+        .std=service.std
+        .destination=service.destination.location.locationName
+        .etd=service.etd
+        .platform=service.platform
+        .operator=service.operator

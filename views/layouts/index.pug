@@ -7,7 +7,9 @@ html
                     h1 Train Times UK
                     include ../partials/search
                     div.section-wrapper
-                        if showResults
+                        if showResults 
                             include ../partials/results
-                        else
+                        else if error
+                            include ../partials/error
+                        else if !error || !showResults
                             include ../partials/make-search
